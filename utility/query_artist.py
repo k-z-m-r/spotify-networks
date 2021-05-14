@@ -92,10 +92,42 @@ def most_similar_artist(search, potential_artists):
             if similarities[max_similarity] < 0.80:
                 print('We could not find an accurate result.  Did you enter the right artist?')
             
+            # top_match is a tuple of (name, id)
             return top_match
 
     # Basically, it's not a dictionary in the structure that we want.
     except:
         print('Data in incorrect form!')
         return None
+
+def get_artist_info(artist_id, access):
+
+    '''
+        artist_id -> the spotify uri of the desired artist.
+        access -> the access token for Spotify.
+    '''
+
+    # We need our header so that Spotify knows what we're doing.
+    headers = {
+        'Authorization': 'Bearer {token}'.format(token=access)
+    }
+
+    # We form the actual query to pass into our request.
+    qry = 'https://api.spotify.com/v1/artists/{}'.format(artist_id)
+    req = request.Request(qry, headers = headers)
+
+    # We basically make sure that the search is valid.
+    try:
+
+        # If it is, we return the return in the form of a dict.
+        resp = request.urlopen(req).read().decode('utf-8')
+
+        return json.loads(resp)
     
+    except error.HTTPError:
+
+        # Otherwise, something went wrong.  This could be like
+        # illegal characters (emojis) or something went wrong.
+        print('Bad request!')
+
+        return None
