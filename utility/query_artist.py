@@ -163,3 +163,59 @@ def get_artist_albums(artist_id, access):
         print('Bad request!')
 
         return None
+
+def get_artist_songs(artist_id, access):
+
+    '''
+        artist_id -> the spotify uri of the desired artist.
+        access -> the access token for Spotify.
+    '''
+
+    # We fetch the albums of an artist.  These contain all of their songs, including singles.
+    try:
+        albums = get_artist_albums(artist_id, access)['items']
+
+        # We want to store it in a dictionary so that we can preserve the
+        # title and artist names / ids.
+        songs = {}
+
+        # We need our header so that Spotify knows what we're doing.
+        headers = {
+            'Authorization': 'Bearer {token}'.format(token=access)
+        }
+
+        for album in albums:
+
+            # We have to fetch the individual tracks on the album, now.
+            qry = 'https://api.spotify.com/v1/albums/{}/tracks'.format(album['id'])
+            req = request.Request(qry, headers = headers)
+            
+            # We basically make sure that the search is valid.
+            try:
+
+                # If it is, we return the return in the form of a dict.
+                resp = request.urlopen(req).read().decode('utf-8')
+                tracks = json.loads(resp)['items']
+ 
+                for track in tracks:
+
+                    # The key-value pair.
+                    title = track['name']
+                    artists = [(artist['name'], artist['id']) for artist in track['artists']]
+                    
+                    # We store the results in a dictionary for ease of access.
+                    songs[title] = artists
+            
+            except error.HTTPError:
+
+                # Otherwise, something went wrong.  This could be like
+                # illegal characters (emojis) or something went wrong.
+                print('Bad request!')
+
+                return songs
+                
+        return songs
+
+    except:
+        print('Bad data structure!')
+        return None
