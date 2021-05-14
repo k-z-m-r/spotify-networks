@@ -131,3 +131,35 @@ def get_artist_info(artist_id, access):
         print('Bad request!')
 
         return None
+
+def get_artist_albums(artist_id, access):
+
+    '''
+        artist_id -> the spotify uri of the desired artist.
+        access -> the access token for Spotify.
+    '''
+
+    # We need our header so that Spotify knows what we're doing.
+    headers = {
+        'Authorization': 'Bearer {token}'.format(token=access)
+    }
+
+    # We form the actual query to pass into our request.
+    qry = 'https://api.spotify.com/v1/artists/{}/albums'.format(artist_id)
+    req = request.Request(qry, headers = headers)
+
+    # We basically make sure that the search is valid.
+    try:
+
+        # If it is, we return the return in the form of a dict.
+        resp = request.urlopen(req).read().decode('utf-8')
+
+        return json.loads(resp)
+    
+    except error.HTTPError:
+
+        # Otherwise, something went wrong.  This could be like
+        # illegal characters (emojis) or something went wrong.
+        print('Bad request!')
+
+        return None
