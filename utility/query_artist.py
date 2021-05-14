@@ -54,32 +54,47 @@ def most_similar_artist(search, potential_artists):
         search -> the artist that the person is looking for.
         potential_artists -> a dict of
     '''
+
+    # We want to make sure that this has the elements we need.
+    # For example, if a dictionary is passed but it's not the right one.
     try:
         list_artists = potential_artists['artists']['items']
         list_artists = [(artist['name'], artist['id']) for artist in list_artists]
 
+        # We check to see if it's an empty list, i.e. a bad query makes it through.
+        # This should never happen, but just in case.
         if len(list_artists) == 0:
             print('Empty list!')
             return None
 
+        # If there's only one result, then we just return the first.
+        # There's no need to iterate, as we'll just return this entry.
         elif len(list_artists) == 1:
             return list_artists[0]
 
         else:
+
+            # We remove whitespace.
             search = search.strip()
 
+            # We define a way to measure the similarity of two strings using SequenceMatcher.
             similarity = lambda a, b: SequenceMatcher(None, a, b).ratio()
 
+            # Here, we store the similarities.  We convert it to lower so that casing isn't an issue.
             similarities = [similarity(search.lower(), artist[0].lower()) for artist in list_artists]
+
+            # Finding the max similarity is easy with numpy.
             max_similarity = argmax(similarities)
-            
             top_match = list_artists[max_similarity]
 
+            # A bit unnecessary, but it would be good to inform the user that the search
+            # might not be right.  The cutoff is arbitrary, but 0.80 felt right.
             if similarities[max_similarity] < 0.80:
                 print('We could not find an accurate result.  Did you enter the right artist?')
             
             return top_match
 
+    # Basically, it's not a dictionary in the structure that we want.
     except:
         print('Data in incorrect form!')
         return None
