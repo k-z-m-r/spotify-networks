@@ -1,5 +1,6 @@
 from connect_to_spotify import *
 from query_artist import *
+import numpy as np
 
 #########################################################
 # The purpose of this .py is to genereate a BFS graph   #
@@ -58,10 +59,16 @@ def bfs(artist, access, limit = 100):
                 # Then, we increment the weight by one.
                 adjacency_list[source_target] += 1
 
+            if len(adjacency_list) >= limit:
+                break
+
+        if len(adjacency_list) >= limit:
+                break
+
     # Now, we actually start the breadth-first search.
     # We want to continue while the limit hasn't been reached
     # or the stack hasn't been fully emptied.
-    while len(dequeued) < limit:
+    while len(adjacency_list) < limit:
         if stack == []:
             break
 
@@ -88,6 +95,47 @@ def bfs(artist, access, limit = 100):
                             adjacency_list[(head[0], name)] = 0
                         adjacency_list[source_target] += 1
 
+                    if len(adjacency_list) >= limit:
+                        break
+
+                if len(adjacency_list) >= limit:
+                    break
+
             dequeued.append(head)
 
     return adjacency_list
+
+def form_adjacency_matrix(adjacency_list, unweighted = True, undirected = True):
+
+    '''
+        adjacency_list -> a key-value pair in (edge -> weight) where the edge is a tuple (source, target).
+        unweighted -> a Boolean flag on whether or not to allow the matrix to be unweighted.
+        undirected -> a Boolean flag on whether or not to allow the matrix to be undirected.
+    '''
+    # We convert the keys into a numpy array for easier combination.
+    numpy_adj = np.array(list(adjacency_list.keys()))
+    source, target = numpy_adj.T
+
+    # Get all of the unique artists for the nodes.
+    nodes = np.union1d(np.unique(source), np.unique(target))
+    N = nodes.shape[0]
+
+    node_mapping = {node: idx for idx, node in enumerate(nodes)}
+
+    # Create the empty array for the adjacency matrix.
+    A = np.zeros((N, N))
+
+    for edge in numpy_adj:
+        node_1, node_2 = edge
+        i, j = node_mapping[node_1], node_mapping[node_2]
+
+        A[i, j] = adjacency_list[(node_1, node_2)]
+
+    if undirected == True:
+        B = np.triu(A) + np.tril(A).T
+        A = B + B.T
+
+    if unweighted == True:
+        A = (A > 0).astype(int)
+
+    return A
